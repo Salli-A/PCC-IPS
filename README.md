@@ -14,7 +14,7 @@ Currently only calculates distance from a single device.
 
 
 **Responder**  
-Works with Initator.
+Works with Initator.  
 Does not currently have a ID.
 
 **WiFi module**  
