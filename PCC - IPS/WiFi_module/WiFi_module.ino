@@ -4,8 +4,8 @@
 
 
 // 2.4Ghz WiFi
-const char* ssid = "";
-const char* password = "";
+const char* ssid = "Network SSID";
+const char* password = "Network password";
 
 // Set web server port number to 80
 WiFiServer server(80);
@@ -53,64 +53,22 @@ void loop() {
   
   // If a new client connects,
   if (client) {
-    currentTime = millis();
-    previousTime = currentTime;
+    // Display the HTML web page
+    client.println("<!DOCTYPE html><html>");
+    client.println("<head><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">");
+    client.println("<link rel=\"icon\" href=\"data:,\">");
     
-    // print a message out in the serial port
-    Serial.println("New Client.");
+    // Web Page Heading
+    client.println("<body><h1>ESP32 Web Server</h1>");
+            
+    client.println("<p>");
+    client.print(" Distance from Anchor: ");
+    client.print(String(distance));
+    client.print(" [m]");
+    client.println("<\p>");
     
-    // make a String to hold incoming data from the client
-    String currentLine = "";
+  }
     
-    // loop while the client's connected
-    while (client.connected() && currentTime - previousTime <= timeoutTime) {
-      currentTime = millis();
-      // if there's bytes to read from the client,
-      if (client.available()){
-        // read a byte, then
-        char c = client.read();
-        // print it out the serial monitor
-        Serial.write(c);
-        header += c;
-        // if the byte is a newline character
-        if (c == '\n') {
-          // if the current line is blank, you got two newline characters in a row.
-          // that's the end of the client HTTP request, so send a response:
-          if (currentLine.length() == 0) {
-            // HTTP headers always start with a response code (e.g. HTTP/1.1 200 OK)
-            // and a content-type so the client knows what's coming, then a blank line:
-            client.println("HTTP/1.1 200 OK");
-            client.println("Content-type:text/html");
-            client.println("Connection: close");
-            client.println();
-            
-            // Display the HTML web page
-            client.println("<!DOCTYPE html><html>");
-            client.println("<head><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">");
-            client.println("<link rel=\"icon\" href=\"data:,\">");
-            
-            // Web Page Heading
-            client.println("<body><h1>ESP32 Web Server</h1>");
-            
-            client.println("<p>");
-            client.print(" Distance from Anchor: ");
-            client.print(String(distance));
-            client.print(" [m]");
-            client.println("<\p>");
-            // If the output26State is off, it displays the ON button
-            
-        }
-      }
-    }
-    // Clear the header variable
-    //header = "";
-    // Close the connection
-    //client.stop();
-    //Serial.println("Client disconnected.");
-    //Serial.println("");
-      }
-    }
-  
   // Check if if WiFi is down, try reconnecting
   unsigned long currentMillis = millis();
   if ((WiFi.status() != WL_CONNECTED) && (currentMillis - previousMillis >=interval)) {
