@@ -10,4 +10,4 @@ Initator - Displays distance data.
 
 Responder - Works with initator.
 
-WiFi module - Connect ESP32 to 2.4 GHz WiFi.
+WiFi module - Connect ESP32 to 2.4 GHz WiFi and display data at local IP.
