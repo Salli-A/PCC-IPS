@@ -19,7 +19,6 @@ Currently only calculates distance from a single device.
 
 **Responder**  
 Works with Initator.  
-Does not currently have a ID.
 
 **WiFi module**  
 Connect ESP32 to 2.4 GHz WiFi and display data at local IP.  
