@@ -1,0 +1,36 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>PCC-IPS</title>
+    <style type="text/css">
+        canvas { border: 1px solid black; }
+        textarea { resize: both; font-family: Consolas,Monaco,Lucida Console,Liberation Mono,DejaVu Sans Mono,Bitstream Vera Sans Mono,Courier New, monospace; }
+        div.distance { display: inline; }
+        #dist { padding-left: 10px; padding-right: 10px; font-weight: bold; }
+        }
+    </style>
+</head>
+<body>
+
+    <p>
+        <div class="distance">Distance: </div>
+        <div class="distance" id="dist">-</div>
+    </p>
+
+    <script>
+    
+    function getDistance(){
+        dist.textContent = httpGet("http://192.168.4.1");
+    }
+
+    function httpGet(theUrl){
+        var xmlHttp = new XMLHttpRequest();
+        xmlHttp.open( "GET", theUrl, false );
+        xmlHttp.send( null );
+        return xmlHttp.responseText;
+    }
+    </script>
+
+</body>
+</html>
