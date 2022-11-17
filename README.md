@@ -6,7 +6,7 @@ Arduino IDE library.
 
 ### PCC-IPS  
 
-Indoor positiong system files.
+Indoor positing system files.
 
 **Initator**  
 Displays distance data.
