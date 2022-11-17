@@ -119,4 +119,5 @@ void loop() {
     WiFi.disconnect();
     WiFi.reconnect();
     previousMillis = currentMillis;
+  }
 }
