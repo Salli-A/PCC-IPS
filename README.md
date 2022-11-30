@@ -13,12 +13,10 @@ Github for Project carrier course, part 1. IPS.
 Indoor positing system files.
 
 **Initator**  
-Displays distance data.  
-Currently only calculates distance from a single device.
-
+Displays distance data, currently used as ANCHOR.  
 
 **Responder**  
-Works with Initator.  
+Sends a UWB signal, currently used as TAG
 
 **WiFi module**  
 Connect ESP32 to 2.4 GHz WiFi and display data at local IP.  
@@ -37,7 +35,7 @@ https://github.com/Makerfabs/Makerfabs-ESP32-UWB-DW3000
 A module that receives UWB signal, calculates distance while sending data via WiFi to Client module.
 
 **M-O-T UWB module**  
-"Many-To-One" module that sends/receives data from many boards to a single one while receiving a UWB signal.
+"Many-To-One" module that sends/receives data from many ANCHORS/INITATORS to a single ANCHOR/INITATOR while it receives a UWB signal.
 
 
 
