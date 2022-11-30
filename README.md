@@ -33,6 +33,14 @@ Requires **ESPAsyncWebServer-master** and **AsyncTCP-master** libraries.
 
 https://github.com/Makerfabs/Makerfabs-ESP32-UWB-DW3000
 
+**AnchorServer**  
+A module that receives UWB signal, calculates distance while sending data via WiFi to Client module.
+
+**M-O-T UWB module**  
+"Many-To-One" module that sends data from many boards to a single one while receiving a UWB signal.
+
+
+
 
 
 
