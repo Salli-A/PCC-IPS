@@ -288,14 +288,9 @@ void wifi_loop() {
 }
 
 void setup() {
-  //Serial.begin(115200);
-
-  //Serial.println("UWB init");
   uwb_init();
-  delay(2000);
-  //Serial.println("Wifi init");
+  delay(1000);
   wifi_init1();
-  //delay(2000);
 
 }
 
