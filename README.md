@@ -34,11 +34,12 @@ https://github.com/Makerfabs/Makerfabs-ESP32-UWB-DW3000
 **AnchorServer**  
 A module that receives UWB signal, calculates distance while sending data via WiFi to Client module.
 
-**M-O-T UWB module**  
+**MTO UWB module**  
 "Many-To-One" module that sends/receives data from many ANCHORS/INITATORS to a single ANCHOR/INITATOR while it receives a UWB signal.
 
 
-
+**WiFi_computer_module** 
+Connects to a network and sends continous data packs to computer though the boards ip address.
 
 
 
