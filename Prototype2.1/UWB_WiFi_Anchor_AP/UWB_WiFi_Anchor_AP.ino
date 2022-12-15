@@ -1,22 +1,22 @@
 #include <dw3000.h>
 
 #include <WiFi.h>
+#include <esp_now.h>
 #include <HTTPClient.h>
 
 #define APP_NAME "SS TWR INIT v1.0"
 
-
 // Import required libraries
 #ifdef ESP32
-  #include <ESPAsyncWebServer.h>
-  #include <SPIFFS.h>
-#else 
-  #include <Arduino.h>
-  #include <ESP8266WiFi.h>
-  #include <Hash.h>
-  #include <ESPAsyncTCP.h>
-  #include <ESPAsyncWebServer.h>
-  #include <FS.h>
+#include <ESPAsyncWebServer.h>
+#include <SPIFFS.h>
+#else
+#include <Arduino.h>
+#include <ESP8266WiFi.h>
+#include <Hash.h>
+#include <ESPAsyncTCP.h>
+#include <ESPAsyncWebServer.h>
+#include <FS.h>
 #endif
 
 // connection pins
@@ -42,7 +42,7 @@ static dwt_config_t config = {
 };
 
 /* Inter-ranging delay period, in milliseconds. */
-#define RNG_DELAY_MS 100
+#define RNG_DELAY_MS 40
 
 /* Default antenna delay values for 64 MHz PRF. See NOTE 2 below. */
 #define TX_ANT_DLY 16385
@@ -96,10 +96,10 @@ static uint32_t status_reg = 0;
 
 /* Hold copies of computed time of flight and distance here for reference so that it can be examined at a debug breakpoint. */
 static double tof;
-static double dist1;
-static double dist2;
-static double dist3;
-static double dist4;
+static double distance_temp;
+static double distance1;
+static String distance2;
+static String distance3;
 
 
 /* Values for the PG_DELAY and TX_POWER registers reflect the bandwidth and power of the spectrum at the current
@@ -158,7 +158,7 @@ void uwb_init() {
   dwt_setlnapamode(DWT_LNA_ENABLE | DWT_PA_ENABLE);
 }
 
-double uwb_loop() {
+void uwb_loop() {
 
   /* Write frame data to DW IC and prepare transmission. See NOTE 7 below. */
   tx_poll_msg[ALL_MSG_SN_IDX] = frame_seq_nb;
@@ -213,7 +213,7 @@ double uwb_loop() {
         rtd_resp = resp_tx_ts - poll_rx_ts;
 
         tof = ((rtd_init - rtd_resp * (1 - clockOffsetRatio)) / 2.0) * DWT_TIME_UNITS;
-        dist1 = tof * SPEED_OF_LIGHT;
+        distance_temp = tof * SPEED_OF_LIGHT;
 
         /* Display computed distance. */
         test_run_info((unsigned char *)dist_str);
@@ -225,49 +225,100 @@ double uwb_loop() {
     /* Clear RX error/timeout events in the DW IC status register. */
     dwt_write32bitreg(SYS_STATUS_ID, SYS_STATUS_ALL_RX_TO | SYS_STATUS_ALL_RX_ERR);
   }
-
-  /* Execute a delay between ranging exchanges. */
-  Sleep(RNG_DELAY_MS);
-  return(dist1);
 }
 
 
 // WIFI
-
 // Set your access point network credentials
 //const char* ssid = "Telia-3E632D";
 //const char* password = "B79D32679B";
 const char* ssid = "Salvar";
 const char* password = "Swordfish";
 
+const char* com9 = "http://192.168.48.145/dist";
+const char* com8 = "http://192.168.48.217/dist";
+const char* com7 = "http://192.168.48.216/dist";
+const char* com5 = "http://192.168.84.195/dist";
+
+
+// IP of other anchors (Needs changing with boards and different WiFi servers)
+const char* Anchor2 = com8;
+const char* Anchor3 = com9;
+
 AsyncWebServer server(80);
+
+# define MedianArraySize 5
+static double distArray[MedianArraySize];
+static int array_length = 0;
 
 void wifi_init() {
 
+  // Initialize SPIFFS
+  if (!SPIFFS.begin()) {
+    Serial.println("An Error has occurred while mounting SPIFFS");
+    return;
+  }
+
   WiFi.begin(ssid, password);
   Serial.print("Connecting");
-  while(WiFi.status() != WL_CONNECTED) { 
-    delay(500);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(1000);
     Serial.print(".");
   }
-  Serial.println("");
+  //Serial.println("");
   Serial.print("Connected to WiFi network with IP Address: ");
   Serial.println(WiFi.localIP());
 
-  server.on("/dist", HTTP_GET, [](AsyncWebServerRequest *request){
-  request->send_P(200, "text/plain", getDist().c_str());
+  // Route for root / web page
+  server.on("/", HTTP_GET, [](AsyncWebServerRequest * request) {
+    request->send(SPIFFS, "/index.html");
   });
-    
+  server.on("/distance", HTTP_GET, [](AsyncWebServerRequest * request) {
+    request->send_P(200, "text/plain", getDist().c_str());
+  });
+
   server.begin();
 }
 
-String getDist(){
-  
+String getDist() {
+  Serial.print("DIST Anchor 1: ");
+  Serial.println(distance1);
+  Serial.print("DIST Anchor2: ");
+  Serial.println(distance2);
+  Serial.print("DIST Anchor3: ");
+  Serial.println(distance3);
+
   // Create a String to send to Website on request
-  String distance_string = String(dist1);
-  return(distance_string);
+  String distance_string = String(distance1) + "," + distance2 + "," + distance3;
+  return (distance_string);
 }
 
+String httpGETRequest(const char* serverName) {
+  WiFiClient client;
+  HTTPClient http;
+
+  // Your Domain name with URL path or IP address with path
+  http.begin(client, serverName);
+
+  // Send HTTP POST request
+  int httpResponseCode = http.GET();
+
+  String payload = "--";
+
+  if (httpResponseCode > 0) {
+    Serial.print("HTTP Response code: ");
+    Serial.println(httpResponseCode);
+    payload = http.getString();
+  }
+  else {
+    Serial.print("Error code: ");
+    Serial.println(httpResponseCode);
+  }
+  // Free resources
+  http.end();
+
+  return payload;
+}
 
 void setup() {
   uwb_init();
@@ -275,10 +326,63 @@ void setup() {
   wifi_init();
 }
 
-
 void loop() {
-  double dist1 = uwb_loop();
-  
-  Serial.print("DIST anchor 1: ");
-  Serial.println(dist1);
+  uwb_loop();
+  push(distance_temp);
+  distance1 = median();
+  distance2 = httpGETRequest(Anchor2);
+  distance3 = httpGETRequest(Anchor3);
+  /* Execute a delay between ranging exchanges. */
+  Sleep(RNG_DELAY_MS);
+}
+
+
+
+void push(double value)
+{
+  // if the array is full, shift all values to the left
+  if (array_length == MedianArraySize) {
+    for (int i = 0; i < MedianArraySize - 1; i++) {
+      distArray[i] = distArray[i + 1];
+    }
+    // decrease the size by one to make room for the new value
+    array_length--;
+  }
+
+  // add the new value to the end of the array
+  distArray[array_length] = value;
+
+  // increase the size of the array by one
+  array_length++;
+}
+
+// calculate the median of an array
+double median()
+{
+  double temp_array[MedianArraySize];
+  for (int i = 0; i < MedianArraySize; i++) {
+    temp_array[i] = distArray[i];
+  }
+
+  // sort the array in ascending order
+  for (int i = 0; i < MedianArraySize; i++) {
+    for (int j = i + 1; j < MedianArraySize; j++) {
+      if (temp_array[i] > temp_array[j]) {
+        double temp = temp_array[i];
+        temp_array[i] = temp_array[j];
+        temp_array[j] = temp;
+      }
+    }
+  }
+
+  // return the median value
+  if (MedianArraySize % 2 == 0) {
+    // if the size of the array is even, return the average of the two middle values
+    int mid = MedianArraySize / 2;
+    return (temp_array[mid - 1] + temp_array[mid]) / 2;
+  } else {
+    // if the size of the array is odd, return the middle value
+    int mid = MedianArraySize / 2;
+    return temp_array[mid];
+  }
 }

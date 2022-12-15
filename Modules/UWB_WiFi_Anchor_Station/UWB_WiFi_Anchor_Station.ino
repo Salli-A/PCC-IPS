@@ -10,7 +10,7 @@
 #ifdef ESP32
   #include <ESPAsyncWebServer.h>
   #include <SPIFFS.h>
-#else 
+#else
   #include <Arduino.h>
   #include <ESP8266WiFi.h>
   #include <Hash.h>
@@ -42,7 +42,7 @@ static dwt_config_t config = {
 };
 
 /* Inter-ranging delay period, in milliseconds. */
-#define RNG_DELAY_MS 100
+#define RNG_DELAY_MS 250
 
 /* Default antenna delay values for 64 MHz PRF. See NOTE 2 below. */
 #define TX_ANT_DLY 16385
@@ -235,15 +235,13 @@ double uwb_loop() {
 // WIFI
 
 // Set your access point network credentials
-//const char* ssid = "Telia-3E632D";
-//const char* password = "B79D32679B";
-const char* ssid = "Salvar";
-const char* password = "Swordfish";
+const char* ssid = "Telia-3E632D";
+const char* password = "B79D32679B";
 
 AsyncWebServer server(80);
 
 void wifi_init() {
-
+  
   WiFi.begin(ssid, password);
   Serial.print("Connecting");
   while(WiFi.status() != WL_CONNECTED) { 

@@ -6,8 +6,6 @@ of this software and associated documentation files.
 The above copyright notice and this permission notice shall be included in all
 copies or substantial portions of the Software. -->
 <head>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <script src="https://code.highcharts.com/highcharts.js"></script>
   <style>
     div.location{ font-size: 30px; display: inline; }
     canvas { border: 1px solid black; }
@@ -39,20 +37,8 @@ copies or substantial portions of the Software. -->
 
 <script>
   // pixel / meter ratio
-  //pixelRatio = 1000/3.5; // based on my room: width = (1000/3.5)*3,75
-  //9.4x6.85m
+  //9.4x6.5m
   pixelRatio = 1000/9.4; // width = (1000/9.4)*6,5
-
-
-  /*
-  x1 = 0;
-  y1 = 3.5/2;
-  x2 = 3.75;
-  y2 = 0;
-  x3 = 3.75;
-  y3 = 3.5;
-  */
-
   
   x2 = 0;
   y2 = 2;
@@ -69,6 +55,23 @@ copies or substantial portions of the Software. -->
   y2 = y2*pixelRatio;
   x3 = x3*pixelRatio;
   y3 = y3*pixelRatio;
+
+  var time_total = 0;
+  var time_PullingSt1 = 0;
+  var time_PullingSt2 = 0;
+  var time_RunningSt = 0;
+  var time_WeightsSt = 0;
+  var time_StretchSt = 0;
+  var time_SquatSt = 0;
+  var time_BikeSt = 0;
+  var time_RowSt = 0;
+
+  var r1=0;
+  var r2=0;
+  var r3=0;
+  
+  var x = 0;
+  var y = 0;
 
 
 function drawRoom(){
@@ -87,17 +90,31 @@ function drawRoom(){
     ctx.lineTo(0, 0);
   ctx.stroke();
 
-  // Anchors
+  // Anchors infographs
   ctx.fillRect(x1, y1, 20, 20);
   ctx.fillRect(x2-10, y2, 20, 20);
   ctx.fillRect(x3, y3, 20, 20);
-  ctx.fillRect(4.5*pixelRatio, 8*pixelRatio, 20, 20);
+
+  //infographs
+  ctx.fillRect(3.7*pixelRatio, 6.9*pixelRatio, 20, 20);
   ctx.font = "25px serif";
-  ctx.fillText(": Anchors", 4.5*pixelRatio+25,8*pixelRatio+16)
+  ctx.fillText(": Anchors", 3.7*pixelRatio+25,6.9*pixelRatio+16)
   ctx.beginPath();
-    ctx.arc(4.5*pixelRatio+10, 8.5*pixelRatio, 10, 0, 2 * Math.PI);
+    ctx.arc(3.7*pixelRatio+10, 7.3*pixelRatio, 10, 0, 2 * Math.PI);
     ctx.fill();
-  ctx.fillText(": Tag", 4.5*pixelRatio+25,8.5*pixelRatio+6)
+  ctx.fillText(": Tag", 3.7*pixelRatio+25,7.3*pixelRatio+6)
+  ctx.font = "monospace";
+  interval = 0.3;
+  ctx.fillText("Stretching station: "+ (time_StretchSt*interval).toFixed(2),  3.7*pixelRatio,7.9*pixelRatio+6)
+  ctx.fillText("Pulling station #1: "+ (time_PullingSt1*interval).toFixed(2) , 3.7*pixelRatio,8.1*pixelRatio+6)
+  ctx.fillText("Pulling station #2: "+ (time_PullingSt2*interval).toFixed(2) , 3.7*pixelRatio,8.3*pixelRatio+6)
+  ctx.fillText("Running station:  "+ (time_RunningSt*interval).toFixed(2) ,  3.7*pixelRatio,8.5*pixelRatio+6)
+  ctx.fillText("Weights station:  "+ (time_WeightsSt*interval).toFixed(2) ,  3.7*pixelRatio,8.7*pixelRatio+6)
+  ctx.fillText("Biking station: "+ (time_BikeSt*interval).toFixed(2) ,     3.7*pixelRatio,8.9*pixelRatio+6)
+  ctx.fillText("Squat station:  "+ (time_SquatSt*interval).toFixed(2) ,    3.7*pixelRatio,9.1*pixelRatio+6)
+  ctx.fillText("Row station:  "+ (time_RowSt*interval).toFixed(2) ,      3.7*pixelRatio,9.3*pixelRatio+6)
+  ctx.fillText("Total time: "+ (time_total*interval).toFixed(2) ,  3.7*pixelRatio,7.7*pixelRatio+6)
+
   
   ctx.beginPath();
     ctx.moveTo(0,9.4*pixelRatio);
@@ -186,15 +203,20 @@ function drawRoom(){
 setInterval(function ( ) {
   const canvas = document.getElementById("canvas");
 
+  time_total ++;
+
   var xhttp = new XMLHttpRequest();
   xhttp.onreadystatechange = function() {
     if (this.readyState == 4 && this.status == 200) {
       txt_received = this.responseText;
       //console.log(txt_received);
       txt_received = txt_received.split(',');
-      r1 = parseFloat(txt_received[0]);
-      r2 = parseFloat(txt_received[1]);
-      r3 = parseFloat(txt_received[2]);
+      if(txt_received[0] > 0){
+        r1 = parseFloat(txt_received[0]);}
+      if(txt_received[1] > 0){
+        r2 = parseFloat(txt_received[1]);}
+      if(txt_received[2] > 0){
+        r3 = parseFloat(txt_received[2]);}
     }
   };
   xhttp.open("GET", "/distance", true);
@@ -233,10 +255,18 @@ setInterval(function ( ) {
     var D = 2*x3 - 2*x2;
     var E = 2*y3 - 2*y2;
     var F = r2**2 - r3**2 - x2**2 + x3**2 - y2**2 + y3**2;
-    var x = (C*E - F*B) / (E*A - B*D);
-    var y = (C*D - A*F) / (B*D - A*E);
+    var x_calc = (C*E - F*B) / (E*A - B*D);
+    var y_calc = (C*D - A*F) / (B*D - A*E);
 
-    //console.log(x);console.log(y);
+    
+    if(x_calc > 0 && y_calc >0){
+      x = x_calc;
+      y = y_calc;
+    }
+
+
+
+    console.log(x);console.log(y);
 
     // finding location
     station = document.getElementById('station');
@@ -244,41 +274,49 @@ setInterval(function ( ) {
     if(y < 1.4*pixelRatio 
       && x > 1.4*pixelRatio && x < 2.8*pixelRatio){
         station.textContent = "Squat station";
+        time_SquatSt++;
     }
 
     else if(y < 3.95*pixelRatio
       && x < 4.0*pixelRatio){
         station.textContent = "Weight station";
+        time_WeightsSt++;
     }
 
     else if(y < 1.85*pixelRatio 
       && x > 4.0*pixelRatio && x < 6.5*pixelRatio){
         station.textContent = "Stretching station";
+        time_StretchSt++;
     }
 
     else if(y > 4.45*pixelRatio && y < 5.75*pixelRatio
       && x < 1.4*pixelRatio){
         station.textContent = "Pulling station #2";
+        time_PullingSt2++;
     }
   
     else if(x < 1.7*pixelRatio && 
       y > 7.8*pixelRatio){
         station.textContent = "Pulling station #1";
+        time_PullingSt1++;
       }
       
     else if(x < 1.7*pixelRatio 
       && y > 6.1*pixelRatio){
         station.textContent = "Biking station";
+        time_BikeSt++;
     }
 
     else if(y > 4.45*pixelRatio && y < 6.55*pixelRatio 
       && x > 2.6*pixelRatio && x < 3.55*pixelRatio){
         station.textContent = "Running station";
+        time_RunningSt++;
     }
 
     else if(y > 4.45*pixelRatio && y < 6.8*pixelRatio 
       && x > 3.7*pixelRatio && x < 4.68*pixelRatio){
         station.textContent = "Rowing station";
+        time_RowSt++;
     }
 
     else{
@@ -290,7 +328,7 @@ setInterval(function ( ) {
     ctx.arc(x, y, 15, 0, 2 * Math.PI);
     ctx.fill();
   }
-}, 200 ) ;
+}, 300 ) ;
 
 </script>
 

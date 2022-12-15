@@ -1,7 +1,7 @@
 #include <dw3000.h>
 
+#include <esp_now.h>
 #include <WiFi.h>
-#include <HTTPClient.h>
 
 #define APP_NAME "SS TWR INIT v1.0"
 
@@ -10,7 +10,7 @@
 #ifdef ESP32
   #include <ESPAsyncWebServer.h>
   #include <SPIFFS.h>
-#else 
+#else
   #include <Arduino.h>
   #include <ESP8266WiFi.h>
   #include <Hash.h>
@@ -42,7 +42,7 @@ static dwt_config_t config = {
 };
 
 /* Inter-ranging delay period, in milliseconds. */
-#define RNG_DELAY_MS 100
+#define RNG_DELAY_MS 250
 
 /* Default antenna delay values for 64 MHz PRF. See NOTE 2 below. */
 #define TX_ANT_DLY 16385
@@ -96,10 +96,9 @@ static uint32_t status_reg = 0;
 
 /* Hold copies of computed time of flight and distance here for reference so that it can be examined at a debug breakpoint. */
 static double tof;
-static double dist1;
-static double dist2;
-static double dist3;
-static double dist4;
+static double distance;
+//static double board1dist;
+//static double board2dist;
 
 
 /* Values for the PG_DELAY and TX_POWER registers reflect the bandwidth and power of the spectrum at the current
@@ -213,7 +212,7 @@ double uwb_loop() {
         rtd_resp = resp_tx_ts - poll_rx_ts;
 
         tof = ((rtd_init - rtd_resp * (1 - clockOffsetRatio)) / 2.0) * DWT_TIME_UNITS;
-        dist1 = tof * SPEED_OF_LIGHT;
+        distance = tof * SPEED_OF_LIGHT;
 
         /* Display computed distance. */
         test_run_info((unsigned char *)dist_str);
@@ -228,46 +227,112 @@ double uwb_loop() {
 
   /* Execute a delay between ranging exchanges. */
   Sleep(RNG_DELAY_MS);
-  return(dist1);
+  return(distance);
 }
 
+
+// WIFI MOT Sender
+
+// Structure example to receive data
+// Must match the sender structure
+typedef struct struct_message {
+  int id;
+  double dist;
+  //int y;
+}struct_message;
+
+// Create a struct_message called myData
+struct_message myData;
+
+// Create a structure to hold the readings from each board
+struct_message board1;
+struct_message board2;
+
+// Create an array with all the structures
+struct_message boardsStruct[1] = {board1};
+//struct_message boardsStruct[2] = {board1, board2};
+
+
+// callback function that will be executed when data is received
+void OnDataRecv(const uint8_t * mac_addr, const uint8_t *incomingData, int len) {
+  char macStr[18];
+  //Serial.print("Packet received from: ");
+  //snprintf(macStr, sizeof(macStr), "%02x:%02x:%02x:%02x:%02x:%02x",
+  //         mac_addr[0], mac_addr[1], mac_addr[2], mac_addr[3], mac_addr[4], mac_addr[5]);
+  //Serial.println(macStr);
+  memcpy(&myData, incomingData, sizeof(myData));
+  //Serial.printf("Board ID %u: %u bytes\n", myData.id, len);
+  // Update the structures with the new incoming data
+  boardsStruct[myData.id-1].dist = myData.dist;
+ //boardsStruct[myData.id-1].y = myData.y;
+  //Serial.printf("Distance: %f \n", boardsStruct[myData.id-1].dist);
+  //Serial.printf("y value: %d \n", boardsStruct[myData.id-1].y);
+  //Serial.println();
+}
+ 
 
 // WIFI
 
-// Set your access point network credentials
-//const char* ssid = "Telia-3E632D";
-//const char* password = "B79D32679B";
-const char* ssid = "Salvar";
-const char* password = "Swordfish";
-
-AsyncWebServer server(80);
-
 void wifi_init() {
 
-  WiFi.begin(ssid, password);
-  Serial.print("Connecting");
-  while(WiFi.status() != WL_CONNECTED) { 
-    delay(500);
-    Serial.print(".");
-  }
-  Serial.println("");
-  Serial.print("Connected to WiFi network with IP Address: ");
-  Serial.println(WiFi.localIP());
+  //Set device as a Wi-Fi Station
+  WiFi.mode(WIFI_STA);
 
-  server.on("/dist", HTTP_GET, [](AsyncWebServerRequest *request){
-  request->send_P(200, "text/plain", getDist().c_str());
-  });
-    
-  server.begin();
+  //Init ESP-NOW
+  if (esp_now_init() != ESP_OK) {
+    Serial.println("Error initializing ESP-NOW");
+    return;
+  }
+  
+  // Once ESPNow is successfully Init, we will register for recv CB to
+  // get recv packer info
+  esp_now_register_recv_cb(OnDataRecv);
 }
+
+
+const char* ssid = "Telia-3E632D";
+const char* password = "B79D32679B";
+AsyncWebServer server(80);
 
 String getDist(){
   
   // Create a String to send to Website on request
-  String distance_string = String(dist1);
+  String distance_string = String(distance)+ ","+ String(boardsStruct[0].dist);
   return(distance_string);
 }
 
+void server_init(){
+  
+  // Initialize SPIFFS
+  if(!SPIFFS.begin()){
+    Serial.println("An Error has occurred while mounting SPIFFS");
+    return;
+  }
+
+  // Connect to Wi-Fi
+  WiFi.begin(ssid, password);
+  Serial.print("Connecting to WiFi ..");
+  while (WiFi.status() != WL_CONNECTED) {
+    Serial.print('.');
+    delay(1000);
+  }
+  Serial.println();
+
+  // Print ESP32 Local IP Address
+  Serial.println(WiFi.localIP());
+
+  // Route for root / web page
+  server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
+    request->send(SPIFFS, "/index.html");
+  });
+  
+  server.on("/distance", HTTP_GET, [](AsyncWebServerRequest *request){
+    request->send_P(200, "text/plain", getDist().c_str());
+  });
+  
+  // Start server
+  server.begin();
+}
 
 void setup() {
   uwb_init();
@@ -275,10 +340,30 @@ void setup() {
   wifi_init();
 }
 
+static int i = 0;
 
 void loop() {
   double dist1 = uwb_loop();
   
+  // Acess the variables for each board
+  double dist2 = boardsStruct[0].dist;
+  double dist3 = boardsStruct[1].dist;
+
+  
+  
   Serial.print("DIST anchor 1: ");
   Serial.println(dist1);
+  Serial.print("DIST anchor 2: ");
+  Serial.println(dist2);
+  Serial.print("DIST anchor 3: ");
+  Serial.println(dist3);
+
+  
+  i = i+1;
+  if(i > 3){
+    server_init();
+    delay(100);
+    wifi_init(); 
+  }
+  
 }

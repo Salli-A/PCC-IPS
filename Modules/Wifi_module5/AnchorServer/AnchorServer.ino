@@ -1,23 +1,6 @@
 #include <dw3000.h>
 
-#include <WiFi.h>
-#include <HTTPClient.h>
-
 #define APP_NAME "SS TWR INIT v1.0"
-
-
-// Import required libraries
-#ifdef ESP32
-  #include <ESPAsyncWebServer.h>
-  #include <SPIFFS.h>
-#else 
-  #include <Arduino.h>
-  #include <ESP8266WiFi.h>
-  #include <Hash.h>
-  #include <ESPAsyncTCP.h>
-  #include <ESPAsyncWebServer.h>
-  #include <FS.h>
-#endif
 
 // connection pins
 const uint8_t PIN_RST = 27; // reset pin
@@ -42,7 +25,7 @@ static dwt_config_t config = {
 };
 
 /* Inter-ranging delay period, in milliseconds. */
-#define RNG_DELAY_MS 100
+#define RNG_DELAY_MS 1000
 
 /* Default antenna delay values for 64 MHz PRF. See NOTE 2 below. */
 #define TX_ANT_DLY 16385
@@ -96,11 +79,7 @@ static uint32_t status_reg = 0;
 
 /* Hold copies of computed time of flight and distance here for reference so that it can be examined at a debug breakpoint. */
 static double tof;
-static double dist1;
-static double dist2;
-static double dist3;
-static double dist4;
-
+static double distance;
 
 /* Values for the PG_DELAY and TX_POWER registers reflect the bandwidth and power of the spectrum at the current
    temperature. These values can be calibrated prior to taking reference measurements. See NOTE 2 below. */
@@ -158,7 +137,7 @@ void uwb_init() {
   dwt_setlnapamode(DWT_LNA_ENABLE | DWT_PA_ENABLE);
 }
 
-double uwb_loop() {
+void uwb_loop() {
 
   /* Write frame data to DW IC and prepare transmission. See NOTE 7 below. */
   tx_poll_msg[ALL_MSG_SN_IDX] = frame_seq_nb;
@@ -213,9 +192,11 @@ double uwb_loop() {
         rtd_resp = resp_tx_ts - poll_rx_ts;
 
         tof = ((rtd_init - rtd_resp * (1 - clockOffsetRatio)) / 2.0) * DWT_TIME_UNITS;
-        dist1 = tof * SPEED_OF_LIGHT;
+        distance = tof * SPEED_OF_LIGHT;
 
         /* Display computed distance. */
+        Serial.print("DIST: ");
+        Serial.print(distance);
         test_run_info((unsigned char *)dist_str);
       }
     }
@@ -228,57 +209,91 @@ double uwb_loop() {
 
   /* Execute a delay between ranging exchanges. */
   Sleep(RNG_DELAY_MS);
-  return(dist1);
 }
 
 
 // WIFI
 
-// Set your access point network credentials
-//const char* ssid = "Telia-3E632D";
-//const char* password = "B79D32679B";
-const char* ssid = "Salvar";
-const char* password = "Swordfish";
+// Import required libraries
+#include "WiFi.h"
+#include "ESPAsyncWebServer.h"
 
+// Set your access point network credentials
+const char* ssid = "PCC_IPS";
+const char* password = "Rincewind";
+
+// Create AsyncWebServer object on port 80
 AsyncWebServer server(80);
 
-void wifi_init() {
+String dist() {
+  // return a 42 value as a test for sending
+  return String(42);
+}
 
-  WiFi.begin(ssid, password);
-  Serial.print("Connecting");
-  while(WiFi.status() != WL_CONNECTED) { 
-    delay(500);
-    Serial.print(".");
-  }
-  Serial.println("");
-  Serial.print("Connected to WiFi network with IP Address: ");
-  Serial.println(WiFi.localIP());
+void wifi_init1() {
+  // Serial port for debugging purposes
 
-  server.on("/dist", HTTP_GET, [](AsyncWebServerRequest *request){
-  request->send_P(200, "text/plain", getDist().c_str());
+  // Setting the ESP as an access point
+  //Serial.print("Setting AP (Access Point)…");
+  // Remove the password parameter, if you want the AP (Access Point) to be open
+  WiFi.softAP(ssid, password);
+
+  IPAddress IP = WiFi.softAPIP();
+  Serial.print("AP IP address: ");
+  Serial.println(IP);
+
+  server.on("/distance", HTTP_GET, [](AsyncWebServerRequest * request) {
+    request->send_P(200, "text/plain", dist().c_str());
   });
-    
+
+  bool status;
+
+  // Start server
   server.begin();
 }
 
-String getDist(){
+const char *host = "192.168.1.103";
+WiFiClient client;
+
+void wifi_init2() {
   
-  // Create a String to send to Website on request
-  String distance_string = String(dist1);
-  return(distance_string);
+  WiFi.mode(WIFI_STA);
+  WiFi.setSleep(false);
+  WiFi.begin(ssid, password);
+  while (WiFi.status() != WL_CONNECTED)
+  {
+    delay(500);
+    Serial.print(".");
+  }
+  Serial.println("Connected");
+  Serial.print("IP Address:");
+  Serial.println(WiFi.localIP());
+
+  if (client.connect(host, 80))
+  {
+    Serial.println("Success");
+    client.print(String("GET /") + " HTTP/1.1\r\n" +
+                 "Host: " + host + "\r\n" +
+                 "Connection: close\r\n" +
+                 "\r\n");
+  }
+
+  delay(1000);
+
 }
 
+void wifi_loop() {
+  Serial.println("WiFi initlization");
+  wifi_init1();
+}
 
 void setup() {
   uwb_init();
   delay(1000);
-  wifi_init();
+  wifi_init1();
+
 }
 
-
 void loop() {
-  double dist1 = uwb_loop();
-  
-  Serial.print("DIST anchor 1: ");
-  Serial.println(dist1);
+  uwb_loop();
 }

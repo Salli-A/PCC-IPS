@@ -42,7 +42,7 @@ static dwt_config_t config = {
 };
 
 /* Inter-ranging delay period, in milliseconds. */
-#define RNG_DELAY_MS 150
+#define RNG_DELAY_MS 100
 
 /* Default antenna delay values for 64 MHz PRF. See NOTE 2 below. */
 #define TX_ANT_DLY 16385
@@ -234,20 +234,20 @@ double uwb_loop() {
 
 
 // WIFI
-
 // Set your access point network credentials
-const char* ssid = "Telia-3E632D";
-const char* password = "B79D32679B";
+//const char* ssid = "Telia-3E632D";
+//const char* password = "B79D32679B";
+const char* ssid = "Salvar";
+const char* password = "Swordfish";
 
 // IP of other anchors
-//const char* com7 = "http://192.168.1.201/dist";
-const char* com8 = "http://192.168.1.187/dist";
-const char* com9 = "http://192.168.1.115/dist";
+const char* com8 = "http://192.168.84.145/dist";
+const char* com9 = "http://192.168.84.217/dist";
 
 AsyncWebServer server(80);
 
 
-# define MedianArraySize 5
+# define MedianArraySize 3
 static double distArray1[MedianArraySize];
 static double distArray2[MedianArraySize];
 static double distArray3[MedianArraySize];
@@ -340,27 +340,9 @@ void loop() {
   double distance2 = httpGETRequest(com8).toDouble();
   double distance3 = httpGETRequest(com9).toDouble();
   
-  //Serial.print(distance1);
-  //Serial.print(", ");
-  //Serial.print(distance2);
-  //Serial.print(", ");
-  //Serial.println(distance3);
-  
   push(distArray1, distance1, 1);
   push(distArray2, distance2, 2);
   push(distArray3, distance3, 3);
-  
-  //Serial.print(distArray1[0]);
-  //Serial.print(", ");
-  //Serial.print(distArray1[1]);
-  //Serial.print(", ");
-  //Serial.print(distArray1[2]);
-  //Serial.print(", ");
-  //Serial.print(distArray1[3]);
-  //Serial.print(", ");
-  //Serial.println(distArray1[4]);
-  //Serial.println(array_length[0]);
-
 }
 
 

@@ -1,0 +1,128 @@
+<!DOCTYPE HTML><html>
+<!-- Rui Santos - Complete project details at https://RandomNerdTutorials.com
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files.
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software. -->
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="https://code.highcharts.com/highcharts.js"></script>
+  <style>
+    body {
+      min-width: 310px;
+    	max-width: 800px;
+    	height: 400px;
+      margin: 0 auto;
+    }
+    h2 {
+      font-family: Arial;
+      font-size: 2.5rem;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <h2>PCC part 2, IPS system</h2>
+  <div id="chart-distance1" class="container"></div>
+  <div id="chart-distance2" class="container"></div>
+</body>
+<canvas id="map" width="150" height="150"></canvas>
+<script>
+var chart1 = new Highcharts.Chart({
+  chart:{ renderTo : 'chart-distance1' },
+  title: { text: 'Distance 1' },
+  series: [{
+    showInLegend: false,
+    data: []
+  },{
+    showInLegend: false,
+    data: []
+  }],
+  plotOptions: {
+    line: { animation: false,
+      dataLabels: { enabled: true }
+    },
+    series: [{ color: '#059e8a' },{ color: '#035e8a' }],
+  },
+  xAxis: { type: 'datetime',
+    dateTimeLabelFormats: { second: '%H:%M:%S' }
+  },
+  yAxis: {
+    title: { text: 'Distance [m]' }
+  },
+  credits: { enabled: false }
+});
+
+setInterval(function ( ) {
+  var xhttp = new XMLHttpRequest();
+  xhttp.onreadystatechange = function() {
+    if (this.readyState == 4 && this.status == 200) {
+      var x = (new Date()).getTime(),
+        txt_received = this.responseText;
+        txt_received = txt_received.split(',');
+        y = parseFloat(txt_received[0]);
+      if(chart1.series[0].data.length > 40) {
+        chart1.series[0].addPoint([x, y], true, true, true);
+      } else {
+        chart1.series[0].addPoint([x, y], true, false, true);
+      }
+    }
+  };
+  xhttp.open("GET", "/distance", true);
+  xhttp.send();
+}, 1000 ) ;
+
+
+
+</script>
+
+
+<script>
+  var chart2 = new Highcharts.Chart({
+    chart:{ renderTo : 'chart-distance2' },
+    title: { text: 'Distance 2' },
+    series: [{
+      showInLegend: false,
+      data: []
+    },{
+      showInLegend: false,
+      data: []
+    }],
+    plotOptions: {
+      line: { animation: false,
+        dataLabels: { enabled: true }
+      },
+      series: { color: '#035e8a' },
+    },
+    xAxis: { type: 'datetime',
+      dateTimeLabelFormats: { second: '%H:%M:%S' }
+    },
+    yAxis: {
+      title: { text: 'Distance [m]' }
+    },
+    credits: { enabled: false }
+  });
+  
+  setInterval(function ( ) {
+    var xhttp = new XMLHttpRequest();
+    xhttp.onreadystatechange = function() {
+      if (this.readyState == 4 && this.status == 200) {
+        var x = (new Date()).getTime(),
+          txt_received = this.responseText;
+          txt_received = txt_received.split(',');
+          y = parseFloat(txt_received[1]);
+  
+        if(chart2.series[0].data.length > 40) {
+          chart2.series[0].addPoint([x, y], true, true, true);
+        } else {
+          chart2.series[0].addPoint([x, y], true, false, true);
+        }
+      }
+    };
+    xhttp.open("GET", "/distance", true);
+    xhttp.send();
+  }, 1000 ) ;
+
+  </script>
+</html>

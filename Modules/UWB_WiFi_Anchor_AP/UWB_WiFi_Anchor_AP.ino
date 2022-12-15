@@ -1,16 +1,16 @@
 #include <dw3000.h>
 
 #include <WiFi.h>
+#include <esp_now.h>
 #include <HTTPClient.h>
 
 #define APP_NAME "SS TWR INIT v1.0"
-
 
 // Import required libraries
 #ifdef ESP32
   #include <ESPAsyncWebServer.h>
   #include <SPIFFS.h>
-#else 
+#else
   #include <Arduino.h>
   #include <ESP8266WiFi.h>
   #include <Hash.h>
@@ -42,7 +42,7 @@ static dwt_config_t config = {
 };
 
 /* Inter-ranging delay period, in milliseconds. */
-#define RNG_DELAY_MS 100
+#define RNG_DELAY_MS 250
 
 /* Default antenna delay values for 64 MHz PRF. See NOTE 2 below. */
 #define TX_ANT_DLY 16385
@@ -97,9 +97,9 @@ static uint32_t status_reg = 0;
 /* Hold copies of computed time of flight and distance here for reference so that it can be examined at a debug breakpoint. */
 static double tof;
 static double dist1;
-static double dist2;
-static double dist3;
-static double dist4;
+static String dist2;
+static String dist3;
+static String dist4;
 
 
 /* Values for the PG_DELAY and TX_POWER registers reflect the bandwidth and power of the spectrum at the current
@@ -235,15 +235,24 @@ double uwb_loop() {
 // WIFI
 
 // Set your access point network credentials
-//const char* ssid = "Telia-3E632D";
-//const char* password = "B79D32679B";
-const char* ssid = "Salvar";
-const char* password = "Swordfish";
+const char* ssid = "Telia-3E632D";
+const char* password = "B79D32679B";
+
+// IP of other anchors
+//const char* com7 = "http://192.168.1.201/dist";
+//const char* com8 = "http://192.168.1.201/dist";
+const char* com9 = "http://192.168.1.115/dist";
 
 AsyncWebServer server(80);
 
 void wifi_init() {
-
+  
+  // Initialize SPIFFS
+  if(!SPIFFS.begin()){
+    Serial.println("An Error has occurred while mounting SPIFFS");
+    return;
+  }
+  
   WiFi.begin(ssid, password);
   Serial.print("Connecting");
   while(WiFi.status() != WL_CONNECTED) { 
@@ -253,8 +262,12 @@ void wifi_init() {
   Serial.println("");
   Serial.print("Connected to WiFi network with IP Address: ");
   Serial.println(WiFi.localIP());
-
-  server.on("/dist", HTTP_GET, [](AsyncWebServerRequest *request){
+  
+  // Route for root / web page
+  server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
+    request->send(SPIFFS, "/index.html");
+  });
+  server.on("/distance", HTTP_GET, [](AsyncWebServerRequest *request){
   request->send_P(200, "text/plain", getDist().c_str());
   });
     
@@ -264,8 +277,35 @@ void wifi_init() {
 String getDist(){
   
   // Create a String to send to Website on request
-  String distance_string = String(dist1);
+  String distance_string = String(dist1)+ ","+ dist2;
   return(distance_string);
+}
+
+String httpGETRequest(const char* serverName) {
+  WiFiClient client;
+  HTTPClient http;
+    
+  // Your Domain name with URL path or IP address with path
+  http.begin(client, serverName);
+  
+  // Send HTTP POST request
+  int httpResponseCode = http.GET();
+  
+  String payload = "--"; 
+  
+  if (httpResponseCode>0) {
+    Serial.print("HTTP Response code: ");
+    Serial.println(httpResponseCode);
+    payload = http.getString();
+  }
+  else {
+    Serial.print("Error code: ");
+    Serial.println(httpResponseCode);
+  }
+  // Free resources
+  http.end();
+
+  return payload;
 }
 
 
@@ -277,8 +317,11 @@ void setup() {
 
 
 void loop() {
-  double dist1 = uwb_loop();
+  dist1 = uwb_loop();
+  dist2 = httpGETRequest(com9);
   
   Serial.print("DIST anchor 1: ");
   Serial.println(dist1);
+  Serial.print("DIST anchor 2: ");
+  Serial.println(dist2);
 }
