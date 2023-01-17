@@ -92,7 +92,9 @@ function drawRoom(){
 
   // Anchors infographs
   ctx.fillRect(x1, y1, 20, 20);
+    ctx.moveTo(x2-10, y2);
   ctx.fillRect(x2-10, y2, 20, 20);
+    ctx.moveTo(x3, y3);
   ctx.fillRect(x3, y3, 20, 20);
 
   //infographs
@@ -105,15 +107,15 @@ function drawRoom(){
   ctx.fillText(": Tag", 3.7*pixelRatio+25,7.3*pixelRatio+6)
   ctx.font = "monospace";
   interval = 0.3;
-  ctx.fillText("Stretching station: "+ (time_StretchSt*interval).toFixed(2),  3.7*pixelRatio,7.9*pixelRatio+6)
-  ctx.fillText("Pulling station #1: "+ (time_PullingSt1*interval).toFixed(2) , 3.7*pixelRatio,8.1*pixelRatio+6)
-  ctx.fillText("Pulling station #2: "+ (time_PullingSt2*interval).toFixed(2) , 3.7*pixelRatio,8.3*pixelRatio+6)
-  ctx.fillText("Running station:  "+ (time_RunningSt*interval).toFixed(2) ,  3.7*pixelRatio,8.5*pixelRatio+6)
-  ctx.fillText("Weights station:  "+ (time_WeightsSt*interval).toFixed(2) ,  3.7*pixelRatio,8.7*pixelRatio+6)
-  ctx.fillText("Biking station: "+ (time_BikeSt*interval).toFixed(2) ,     3.7*pixelRatio,8.9*pixelRatio+6)
-  ctx.fillText("Squat station:  "+ (time_SquatSt*interval).toFixed(2) ,    3.7*pixelRatio,9.1*pixelRatio+6)
-  ctx.fillText("Row station:  "+ (time_RowSt*interval).toFixed(2) ,      3.7*pixelRatio,9.3*pixelRatio+6)
-  ctx.fillText("Total time: "+ (time_total*interval).toFixed(2) ,  3.7*pixelRatio,7.7*pixelRatio+6)
+  ctx.fillText("Stretching station: "+ (time_StretchSt*interval).toFixed(1),  3.7*pixelRatio,7.9*pixelRatio+6)
+  ctx.fillText("Pulling station #1: "+ (time_PullingSt1*interval).toFixed(1) , 3.7*pixelRatio,8.1*pixelRatio+6)
+  ctx.fillText("Pulling station #2: "+ (time_PullingSt2*interval).toFixed(1) , 3.7*pixelRatio,8.3*pixelRatio+6)
+  ctx.fillText("Running station:  "+ (time_RunningSt*interval).toFixed(1) ,  3.7*pixelRatio,8.5*pixelRatio+6)
+  ctx.fillText("Weights station:  "+ (time_WeightsSt*interval).toFixed(1) ,  3.7*pixelRatio,8.7*pixelRatio+6)
+  ctx.fillText("Biking station: "+ (time_BikeSt*interval).toFixed(1) ,     3.7*pixelRatio,8.9*pixelRatio+6)
+  ctx.fillText("Squat station:  "+ (time_SquatSt*interval).toFixed(1) ,    3.7*pixelRatio,9.1*pixelRatio+6)
+  ctx.fillText("Row station:  "+ (time_RowSt*interval).toFixed(1) ,      3.7*pixelRatio,9.3*pixelRatio+6)
+  ctx.fillText("Total time: "+ (time_total*interval).toFixed(1) ,  3.7*pixelRatio,7.7*pixelRatio+6)
 
   
   ctx.beginPath();
@@ -241,12 +243,12 @@ setInterval(function ( ) {
     ctx.stroke();
 
     // draw the lines between the circles
-    ctx.beginPath();
-    ctx.moveTo(x1, y1);
-    ctx.lineTo(x2, y2);
-    ctx.lineTo(x3, y3);
-    ctx.lineTo(x1, y1);
-    ctx.stroke();
+    //ctx.beginPath();
+    //ctx.moveTo(x1, y1);
+    //ctx.lineTo(x2, y2);
+    //ctx.lineTo(x3, y3);
+    //ctx.lineTo(x1, y1);
+    //ctx.stroke();
 
     // trilateration
     var A = 2*x2 - 2*x1;

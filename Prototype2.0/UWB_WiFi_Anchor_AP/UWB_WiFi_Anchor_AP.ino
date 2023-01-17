@@ -241,8 +241,14 @@ const char* ssid = "Salvar";
 const char* password = "Swordfish";
 
 // IP of other anchors
-const char* com8 = "http://192.168.84.145/dist";
+const char* com8 = "http://192.168.245.217/dist";
 const char* com9 = "http://192.168.84.217/dist";
+const char* com11 = "http://192.168.245.223/dist";
+const char* com12 = "http://192.168.245.192/dist";
+
+
+const char* station1 = "http://192.168.245.217/dist";
+const char* station2 = "http://192.168.245.223/dist";
 
 AsyncWebServer server(80);
 
@@ -337,8 +343,8 @@ void setup() {
 
 void loop() {
   double distance1 = uwb_loop();
-  double distance2 = httpGETRequest(com8).toDouble();
-  double distance3 = httpGETRequest(com9).toDouble();
+  double distance2 = httpGETRequest(station1).toDouble();
+  double distance3 = httpGETRequest(station2).toDouble();
   
   push(distArray1, distance1, 1);
   push(distArray2, distance2, 2);

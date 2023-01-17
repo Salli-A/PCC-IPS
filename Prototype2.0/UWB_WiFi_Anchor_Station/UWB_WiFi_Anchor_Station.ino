@@ -279,6 +279,6 @@ void setup() {
 void loop() {
   double dist1 = uwb_loop();
   
-  Serial.print("DIST anchor 1: ");
+  Serial.print("DIST: ");
   Serial.println(dist1);
 }
