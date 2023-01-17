@@ -5,8 +5,6 @@
 
 // 2.4Ghz WiFi
 // Set SSID and password
-const char* ssid = "Telia-3E632D";
-const char* password = "B79D32679B";
 
 // Set web server port number to 80
 WiFiServer server(80);
