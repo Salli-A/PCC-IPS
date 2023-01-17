@@ -31,13 +31,14 @@ Upload the UWB_WiFi_Anchor_AP to a two UWB ESP32 v1.0 microcontrollers.
 
 Upload the UWB_WiFi_Anchor_Station to a singular UWB ESP32 v1.0 microcontroller.
 Make sure to press *tools* and select *ESP32 Sketch data upload* before in order to upload the html file to the board.
-(Need to close the Arduino IDE everytime the html file is changed for the change to take place.)
+(Need to close the Arduino IDE everytime the html file is changed for the change to take place. Make sure to use ESP32 board manager in the Arduino IDE.)
 
 Decide on coordinates of all anchors, insert them into the html file in the UWB_WiFi_Anchor_Station. 
 Change the code so that the correct IP address of all anchors are correct.
 Change the code so that all the anchors connect to the same WiFi network. 
 Insert the IP address of the station in a browser of the device which is inteded to display the information.
 
+The ranging is performed using code developed by NConcepts, https://github.com/Makerfabs/Makerfabs-ESP32-UWB-DW3000.
 
 
 ### Modules  
