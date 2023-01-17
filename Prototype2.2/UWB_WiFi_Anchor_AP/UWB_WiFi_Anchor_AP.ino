@@ -231,8 +231,6 @@ void uwb_loop() {
 
 // WIFI
 // Set your access point network credentials
-//const char* ssid = "Telia-3E632D";
-//const char* password = "B79D32679B";
 const char* ssid = "Salvar";
 const char* password = "Swordfish";
 
