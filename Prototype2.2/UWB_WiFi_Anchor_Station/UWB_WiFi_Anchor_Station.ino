@@ -12,7 +12,7 @@
   #include <SPIFFS.h>
 #else
   #include <Arduino.h>
-  #include <ESP8266WiFi.h>
+  #include <ESP8266.h>
   #include <Hash.h>
   #include <ESPAsyncTCP.h>
   #include <ESPAsyncWebServer.h>
@@ -229,8 +229,6 @@ double uwb_loop() {
 // WIFI
 
 // Set your access point network credentials
-//const char* ssid = "Telia-3E632D";
-//const char* password = "B79D32679B";
 const char* ssid = "Salvar";
 const char* password = "Swordfish";
 AsyncWebServer server(80);
