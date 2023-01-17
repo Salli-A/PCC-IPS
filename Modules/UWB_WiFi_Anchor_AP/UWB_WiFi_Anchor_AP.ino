@@ -235,8 +235,6 @@ double uwb_loop() {
 // WIFI
 
 // Set your access point network credentials
-const char* ssid = "Telia-3E632D";
-const char* password = "B79D32679B";
 
 // IP of other anchors
 //const char* com7 = "http://192.168.1.201/dist";
