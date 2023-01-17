@@ -290,8 +290,6 @@ void wifi_init() {
 }
 
 
-const char* ssid = "Telia-3E632D";
-const char* password = "B79D32679B";
 AsyncWebServer server(80);
 
 String getDist(){
