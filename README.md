@@ -25,7 +25,7 @@ Requests distance data from AP anchors with WiFi.
 Sends distance data to device connected on the same WiFi network thought its IP address.
 Sends webpage that calculates location and displays it. 
 
-**Instructions**
+**Instructions**  
 Upload the Tag_Responder_module to a singular UWB ESP32 v1.0 microcontroller. 
 Upload the UWB_WiFi_Anchor_AP to a two UWB ESP32 v1.0 microcontrollers. 
 
@@ -34,6 +34,9 @@ Make sure to press *tools* and select *ESP32 Sketch data upload* before in order
 (Need to close the Arduino IDE everytime the html file is changed for the change to take place.)
 
 Decide on coordinates of all anchors, insert them into the html file in the UWB_WiFi_Anchor_Station. 
+Change the code so that the correct IP address of all anchors are correct.
+Change the code so that all the anchors connect to the same WiFi network. 
+Insert the IP address of the station in a browser of the device which is inteded to display the information.
 
 
 
