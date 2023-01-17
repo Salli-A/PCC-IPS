@@ -31,8 +31,6 @@
 
 
 // Replace with your network credentials
-//const char* ssid = "Telia-3E632D";
-//const char* password = "B79D32679B";
 const char* ssid = "PCC-IPS";
 const char* password = "Swordfish";
 
