@@ -8,9 +8,38 @@ Github for Project carrier course, part 1. IPS.
 **AsyncTCP-master**  
 
 
-### PCC-IPS  
+### Prototypes
 
-Indoor positing system files.
+Currently using Prototype 2.1. 
+
+**Tag_Responder_module**  
+Responder that acts as a TAG.
+
+**UWB_WiFi_Anchor_AP**  
+Initator that acts as ANCHOR and access point (AP).
+Sends distance data on request to station.
+
+**UWB_WiFi_Anchor_Station**  
+Initator that acts as ANCHOR and station.
+Requests distance data from AP anchors with WiFi. 
+Sends distance data to device connected on the same WiFi network thought its IP address.
+Sends webpage that calculates location and displays it. 
+
+**Instructions**
+Upload the Tag_Responder_module to a singular UWB ESP32 v1.0 microcontroller. 
+Upload the UWB_WiFi_Anchor_AP to a two UWB ESP32 v1.0 microcontrollers. 
+
+Upload the UWB_WiFi_Anchor_Station to a singular UWB ESP32 v1.0 microcontroller.
+Make sure to press *tools* and select *ESP32 Sketch data upload* before in order to upload the html file to the board.
+(Need to close the Arduino IDE everytime the html file is changed for the change to take place.)
+
+Decide on coordinates of all anchors, insert them into the html file in the UWB_WiFi_Anchor_Station. 
+
+
+
+### Modules  
+
+Indoor positing system modules for testing.
 
 **Initator**  
 Displays distance data, currently used as ANCHOR.  
@@ -28,8 +57,6 @@ Connect ESP32 to 2.4 GHz WiFi and display data at local IP.
 Currently only displays randomly generated value.  
 Does not generate HTML file, sends data on client side request.  
 Requires **ESPAsyncWebServer-master** and **AsyncTCP-master** libraries.
-
-https://github.com/Makerfabs/Makerfabs-ESP32-UWB-DW3000
 
 **AnchorServer**  
 A module that receives UWB signal, calculates distance while sending data via WiFi to Client module.
